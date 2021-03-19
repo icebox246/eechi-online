@@ -7,14 +7,19 @@ class MatchMaker {
   }
 
   createGame() {
-    // for creating game match
-    const gameId = nanoid();
-    this.games[gameId] = new Game();
+    // for creating game match returns gameId of the created one
+    const gameId = nanoid(); //generate id for the game
+    this.games[gameId] = new Game(this,gameId);
     console.log("Created new game", gameId);
     return gameId;
   }
 
-  joinGame(gameId,socket) {
+  removeGame(gameId) { // for removing empty games
+    console.log("Removed game", gameId);
+    delete this.games[gameId];
+  }
+
+  joinGame(gameId,socket) { // for trying to join a game
     if (this.games[gameId]) {
       this.games[gameId].addPlayer(socket);
       return true;

@@ -11,7 +11,14 @@
 
 <body>
   <h1>Welcome to Eechi!</h1>
-  <a href="/create">Create new game!</a>
+  <h3>
+    <a href="/create">Create new game!</a>
+  </h3>
+  <form action="/game" method="get">
+    <h3>Join existing game:</h3>
+    <input type="text" name="id" placeholder="Game ID">
+    <input type="submit" value="join">
+  </form>
 </body>
 
 </html>
