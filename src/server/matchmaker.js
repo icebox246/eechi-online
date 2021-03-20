@@ -6,10 +6,10 @@ class MatchMaker {
     this.games = {}; // stores all running games
   }
 
-  createGame() {
+  createGame(options) {
     // for creating game match returns gameId of the created one
     const gameId = nanoid(); //generate id for the game
-    this.games[gameId] = new Game(this,gameId);
+    this.games[gameId] = new Game(this,gameId,options);
     console.log("Created new game", gameId);
     return gameId;
   }
@@ -20,7 +20,7 @@ class MatchMaker {
   }
 
   joinGame(gameId,socket) { // for trying to join a game
-    if (this.games[gameId]) {
+    if (this.games[gameId] && this.games[gameId].state === "waiting") {
       this.games[gameId].addPlayer(socket);
       return true;
     }

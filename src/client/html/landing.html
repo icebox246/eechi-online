@@ -11,12 +11,16 @@
 
 <body>
   <h1>Welcome to Eechi!</h1>
-  <h3>
-    <a href="/create">Create new game!</a>
-  </h3>
+  <form action="/create" method="post">
+    <h3> Create new game! </h3>
+    <label for="playerCount">Player count:</label>
+    <input type="number" name="playerCount" id="playerCount" value="2">
+    <input type="submit" value="create">
+  </form>
   <form action="/game" method="get">
     <h3>Join existing game:</h3>
-    <input type="text" name="id" placeholder="Game ID">
+    <label for="id">Game id:</label>
+    <input type="text" name="id" placeholder="xxxxxxxxxxxxxx">
     <input type="submit" value="join">
   </form>
 </body>

@@ -1,0 +1,50 @@
+* {
+  box-sizing: border-box;
+}
+
+.page {
+  display: none;
+}
+
+.page.default {
+  display: block;
+}
+
+#my-cards {
+  display: flex;
+}
+
+.card {
+  cursor: pointer;
+  font-size: 30px;
+  background-color: rgb(139, 139, 139);
+  width: 100px;
+  height: 200px;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+#other-players {
+  display: flex;
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid grey;
+  width: 100px;
+  padding: 10px;
+}
+
+.player.current {
+  background-color: rgb(54, 54, 54);
+}
+
+#draw-deck {
+  background-color: rgb(54, 54, 54);
+  border: 2px solid grey;
+  width: 100px;
+  height: 100px;
+  padding: 10px;
+  cursor: pointer;
+}

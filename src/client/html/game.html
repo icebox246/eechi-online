@@ -8,14 +8,42 @@
   <title>Eechi game</title>
   <script src="js/socket.io.js"></script>
   <script src="js/game.js" defer></script>
+  <link rel="stylesheet" href="/css/game.css">
 </head>
 
 <body>
-  <h1>Welcome to the game!</h1>
-  <a href="/create">Create another game...</a>
-  <p id="game-id"></p>
-  <h3>Players:</h3>
-  <ul id="player-list"></ul>
+  <a href="/">Back to home page</a>
+  <div id="connecting-page" class="page default">
+    <h1>Connecting...</h1>
+  </div>
+  <div id="error-page" class="page">
+    <h1>Connection ERROR!</h1>
+  </div>
+  <div id="waiting-page" class="page">
+    <h1>Welcome to the game!</h1>
+    <p id="game-id"></p>
+    <h3>Players <span id="player-count">0/0</span>:</h3>
+    <ul id="player-list"></ul>
+  </div>
+
+  <div id="playing-page" class="page">
+    <h2>Opponents:</h2>
+    <div id="other-players"></div>
+    <h2>Current card:</h2>
+    <div id="top-card"></div>
+    <h2>Draw deck:</h2>
+    <div id="draw-deck">
+      <span>Draw</span>
+      <span id="draw-deck-size">0</span>
+    </div>
+    <h2>My cards:</h2>
+    <div id="my-cards"></div>
+    <div id="put-question" style="display:none">
+      <div id="put-question-card"></div>
+      <button id="put-question-accept">Play</button>
+      <button id="put-question-deny">Keep</button>
+    </div>
+  </div>
 </body>
 
 </html>
