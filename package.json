@@ -4,14 +4,15 @@
   "description": "",
   "main": "src/server/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon src/server/main.js"
+    "dev": "nodemon src/server/main.js",
+    "start": "node src/server/main.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "connect-livereload": "^0.6.1",
+    "dotenv": "^8.2.0",
     "livereload": "^0.9.3",
     "nodemon": "^2.0.7"
   },

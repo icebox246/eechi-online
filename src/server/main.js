@@ -5,6 +5,7 @@ const {
 } = require('./matchmaker')
 const http = require("http");
 const socketio = require("socket.io")
+require("dotenv").config();
 
 const matchMaker = new MatchMaker(); // matchmaker object singleton
 
@@ -13,7 +14,7 @@ const app = express(); // for serving and api
 const server = http.createServer(app); // for handling incoming traffic
 const io = socketio(server); // for socket communication
 
-//TODO Make only run in dev
+if (process.env.DEBUG) {
 // live reload to make dev less hurtful only for DEBUG
 const livereload = require("livereload");
 const connectLivereload = require("connect-livereload");
@@ -21,6 +22,7 @@ const liveReloadServer = livereload.createServer();
 liveReloadServer.watch(path.join(process.cwd(), 'src/client'));
 app.use(connectLivereload());
 // end livereload
+}
 
 // Express routing
 app.use(express.urlencoded({

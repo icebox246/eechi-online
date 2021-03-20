@@ -169,7 +169,6 @@ class Game {
     this.incrementCurrentPlayerIndex();
     this.emitTurnUpdate();
   }
-
   refreshDrawDeck() { // move cards from discard pile to deck
     while (this.discardPile.length > 2) {
       this.drawDeck.push(this.discardPile.shift());
@@ -253,6 +252,7 @@ class Game {
   }
 
   logPlayerCount() { // for debuggin
+    if(process.env.DEBUG)
     console.log("current count on", this.id, "is", this.playerIds.length, "of", this.totalPlayers);
   }
 
