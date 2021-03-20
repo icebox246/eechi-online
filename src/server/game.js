@@ -19,7 +19,7 @@ class Game {
     this.matchMaker = matchMaker;
     this.id = id;
     this.totalPlayers = Number.parseInt(options.playerCount) || 2;
-    this.startingCardCount = 6;
+    this.startingCardCount = 7;
     this.state = "waiting";
     this.reversed = false;
   }
@@ -42,12 +42,29 @@ class Game {
           currentCardId++;
         }
       }
-    
+
     for (let color of COLORS) {
       this.drawDeck.push({
         color,
-        val: "0"
+        val: "0",
+        id: currentCardId
       });
+      currentCardId++;
+    }
+
+    for (let i = 0; i < 4; i++) {
+      this.drawDeck.push({
+        color: "special",
+        val: "wild",
+        id: currentCardId
+      })
+      currentCardId++;
+      this.drawDeck.push({
+        color: "special",
+        val: "draw4",
+        id: currentCardId
+      })
+      currentCardId++;
     }
 
     this.drawDeck = shuffle(this.drawDeck);
@@ -59,7 +76,9 @@ class Game {
       player.emitCardUpdate();
     })
 
-    this.discardPile.push(this.drawDeck.pop());
+    do
+      this.discardPile.push(this.drawDeck.pop());
+    while (this.getTopCard().color == "special");
 
     this.state = "playing";
     this.emitToAll("stateChange", {
@@ -68,29 +87,62 @@ class Game {
     this.emitTurnUpdate();
   }
 
-  putCard(player, card) {
+  putCard(player, card) { // put card on discard pile
     if (!this.checkPlayer(player)) return;
     if (player.queuedCard !== null) {
       if (card.id !== player.queuedCard.id) return;
     }
-    if (this.testCard(card)) {
+    if (this.testCard(card, player)) {
       this.discardPile.push(card);
       player.removeCard(card.id);
       player.emitCardUpdate();
+
+      if (player.cards.length === 0) {
+        this.state = "finished"
+        this.emitToAll("stateChange", {
+          state: this.state
+        });
+        this.emitToAll("winner", {
+          player: {
+            username: player.username
+          }
+        })
+        return;
+      }
 
       if (card.val === 'skip') {
         this.incrementCurrentPlayerIndex();
       } else if (card.val === 'draw2') {
         this.incrementCurrentPlayerIndex();
-        const nextPlayer = players[playerIds[this.currentPlayerIndex]];
+        const nextPlayer = this.players[this.playerIds[this.currentPlayerIndex]];
         this.drawCard(nextPlayer);
         this.drawCard(nextPlayer);
       } else if (card.val === "reverse") {
         this.reversed = !this.reversed;
+      } else if (card.val === "wild") {
+        player.hasWildChoice = true;
+        player.socket.emit("askWild");
+        return;
+      } else if (card.val === "draw4") {
+        player.hasWildChoice = true;
+        player.socket.emit("askWild");
+        this.incrementCurrentPlayerIndex();
+        const nextPlayer = this.players[this.playerIds[this.currentPlayerIndex]];
+        this.drawCard(nextPlayer);
+        this.drawCard(nextPlayer);
+        this.drawCard(nextPlayer);
+        this.drawCard(nextPlayer);
+        return;
       }
+
 
       this.goNextRound();
     }
+  }
+
+  setRequiredColor(color) { // set color given by wild
+    this.requiredColor = color;
+    this.goNextRound();
   }
 
   drawCard(player, voluntary = false) { // for drawing a card from deck
@@ -98,37 +150,52 @@ class Game {
     const card = this.drawDeck.pop();
     if (this.drawDeck.length === 0) this.refreshDrawDeck();
     player.cards.push(card);
-    if (voluntary && this.testCard(card)) {
-      player.socket.emit("askPut", {
-        card: card
-      });
-      player.queuedCard = card;
+    if (voluntary) {
+      if (this.testCard(card, player)) {
+        player.socket.emit("askPut", {
+          card: card
+        });
+        player.queuedCard = card;
+      } else {
+        player.emitCardUpdate();
+        this.goNextRound();
+      }
     } else {
       player.emitCardUpdate();
     }
   }
 
-  goNextRound() {
+  goNextRound() { // finish and go to next rouund
     this.incrementCurrentPlayerIndex();
     this.emitTurnUpdate();
   }
 
-  refreshDrawDeck() {
+  refreshDrawDeck() { // move cards from discard pile to deck
     while (this.discardPile.length > 2) {
       this.drawDeck.push(this.discardPile.shift());
     }
     shuffle(this.drawDeck);
   }
 
-  checkPlayer(player) {
+  checkPlayer(player) { // check whether it's this player's turn
     const playerIndex = this.playerIds.findIndex(pId => pId === player.id);
     return (playerIndex === this.currentPlayerIndex);
   }
 
-  testCard(card) {
+  testCard(card, player) {
     const topCard = this.getTopCard();
 
-    if (topCard.color === card.color || topCard.val === card.val) {
+    if (card.val === "wild") return true;
+    if (card.val === "draw4") {
+      if (player.cards.filter(c => c.color === topCard.color).length > 0) {
+        return false;
+      } else {
+        return true;
+      }
+    }
+
+    if (topCard.color === card.color || topCard.val === card.val ||
+      (topCard.color === "special" && card.color === this.requiredColor)) {
       return true;
     } else {
       return false;
@@ -136,7 +203,7 @@ class Game {
   }
 
   incrementCurrentPlayerIndex() { // increments current player index
-    return this.currentPlayerIndex = (this.currentPlayerIndex + (this.reversed ? -1 : 1) +this.playerIds.length) % this.playerIds.length;
+    return this.currentPlayerIndex = (this.currentPlayerIndex + (this.reversed ? -1 : 1) + this.playerIds.length) % this.playerIds.length;
   }
 
   getTopCard() { // give a card form top of the put deck
@@ -148,7 +215,8 @@ class Game {
       players: this.getPlayerList(),
       currentPlayerId: this.playerIds[this.currentPlayerIndex],
       topCard: this.getTopCard(),
-      drawDeckSize: this.drawDeck.length
+      drawDeckSize: this.drawDeck.length,
+      wildColor: this.requiredColor,
     })
   }
 
@@ -219,6 +287,7 @@ class Player { // used describe player objects
     this.id = socket.id;
     this.cards = [];
     this.queuedCard = null;
+    this.hasWildChoice = false;
 
     socket.on("putCard", data => this.putCard(data.id));
     socket.on("drawCard", () => this.drawCard());
@@ -234,6 +303,12 @@ class Player { // used describe player objects
         this.emitCardUpdate();
         this.game.goNextRound();
       }
+    })
+
+    socket.on("answerWild", data => {
+      if (this.hasWildChoice)
+        game.setRequiredColor(data.color);
+      this.hasWildChoice = false;
     })
   }
 

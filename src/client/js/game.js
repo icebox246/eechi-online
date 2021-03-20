@@ -18,18 +18,24 @@ if (!gameId) {
   let totalPlayers;
   let myCards = [];
 
+  let wildColor = "purple";
+
+
   const stateE = {};
   stateE.connecting = document.querySelector("#connecting-page");
   stateE.error = document.querySelector("#error-page");
   stateE.waiting = document.querySelector("#waiting-page");
   stateE.playing = document.querySelector("#playing-page");
+  stateE.finished = document.querySelector("#finished-page");
+
+  changeState("connecting");
 
   //getting the user name
   let username = null;
-  username = prompt("gimme thy username yarr", "guest" + Math.trunc(Math.random()*100));
+  username = prompt("gimme thy username yarr", "guest" + Math.trunc(Math.random() * 100));
   if (username === null) username = "guest";
   // otherwise start connecting
-  const socket = io(`ws://${location.hostname}:3000`, {
+  const socket = io(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}`, {
     query: {
       gameId: gameId,
       username: username
@@ -77,9 +83,15 @@ if (!gameId) {
   socket.on("turnUpdate", data => {
     console.log("got new turn update", data);
     displayOtherPlayers(data);
+    wildColor = data.wildColor;
     topCardE.innerHTML = "";
     topCardE.appendChild(generateCardE(data.topCard));
     drawDeckSizeE.innerText = data.drawDeckSize;
+    if (data.currentPlayerId === myPlayerId) {
+      myCardsE.classList.add("my-turn")
+    } else {
+      myCardsE.classList.remove("my-turn")
+    }
   })
 
   const putQuestionE = document.querySelector("#put-question");
@@ -102,15 +114,37 @@ if (!gameId) {
     putQuestionCardE.appendChild(generateCardE(data.card));
   })
 
+  const wildQuestionE = document.querySelector("#wild-question");
+  const COLORS = ["red", "green", "blue", "yellow"]
+
+  socket.on("askWild", data => {
+    wildQuestionE.classList.remove("hidden");
+  })
+
+  for (let color of COLORS) {
+    document.querySelector("#wild-" + color).onclick = () => {
+      socket.emit("answerWild", {
+        color
+      });
+    wildQuestionE.classList.add("hidden");
+    }
+  }
+
+  const winnerNameE = document.querySelector("#winner-name");
+  socket.on("winner", data => {
+    winnerNameE.innerText = data.player.username;
+  })
+
+
   drawDeckE.onclick = () => {
     socket.emit("drawCard");
   }
 
   function changeState(state) {
     for (let sE of Object.values(stateE)) {
-      sE.style.display = "none";
+      sE.classList.add("hidden");
     }
-    stateE[state].style.display = "inherit";
+    stateE[state].classList.remove("hidden");
   }
 
   function displayPlayerList(players) {
@@ -130,34 +164,58 @@ if (!gameId) {
   function displayMyCards() {
     myCardsE.innerHTML = "";
     for (let card of myCards) {
-      myCardsE.appendChild(generateCardE(card,true));
+      myCardsE.appendChild(generateCardE(card, true));
     }
   }
 
-  function generateCardE(card,player=false) {
+  function generateCardE(card, player = false) {
+    const cardE = document.createElement("div");
+    cardE.classList.add("card-container");
     const cardDIV = document.createElement("div");
     cardDIV.classList.add("card");
 
     const nameSPAN = document.createElement("span"); // placeholder
     nameSPAN.innerText = card.val;
-    nameSPAN.style.color = card.color;
+    if (card.color === "special")
+      nameSPAN.style.color = (player ? "purple" : wildColor);
+    else
+      nameSPAN.style.color = card.color;
     cardDIV.appendChild(nameSPAN)
 
-    if(player)
-      cardDIV.onclick = () => {// use that card
-        socket.emit("putCard", { id: card.id });
-      }; 
-    return cardDIV;
+    if (player)
+      cardDIV.onclick = () => { // use that card
+        socket.emit("putCard", {
+          id: card.id
+        });
+      };
+
+    cardE.appendChild(cardDIV);
+    return cardE;
   }
 
   function displayOtherPlayers(data) {
     otherPlayersE.innerHTML = "";
+    let foundMe = false;
+    //draw people after me
     for (let player of data.players) {
-      if (player.playerId !== myPlayerId) {
+      if (player.playerId === myPlayerId) {
+        foundMe = true;
+        continue;
+      }
+      if (foundMe) {
         otherPlayersE.appendChild(
           generatePlayerE(player, player.playerId === data.currentPlayerId)
         );
       }
+    }
+    //draw people before me
+    for (let player of data.players) {
+      if (player.playerId === myPlayerId) {
+        break
+      }
+        otherPlayersE.appendChild(
+          generatePlayerE(player, player.playerId === data.currentPlayerId)
+        );
     }
   }
 
@@ -175,6 +233,17 @@ if (!gameId) {
     cardCountSPAN.innerText = player.cardCount;
     cardCountSPAN.classList.add('card-count');
     playerDIV.appendChild(cardCountSPAN);
+
+    const cardPreviewDIV = document.createElement("div");
+    cardPreviewDIV.classList.add("card-preview");
+    for (let x = 0; x < player.cardCount; x++) {
+      const cardDiv = document.createElement("div");
+      const cardDiv2 = document.createElement("div");
+      cardDiv2.classList.add("mini-card");
+      cardDiv.appendChild(cardDiv2);
+      cardPreviewDIV.appendChild(cardDiv);
+    }
+    playerDIV.appendChild(cardPreviewDIV);
 
     return playerDIV;
   }
