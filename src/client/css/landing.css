@@ -6,6 +6,10 @@ button {
   color: white;
 }
 
+input {
+  color: initial;
+}
+
 body {
   background: linear-gradient(to bottom right, #7648ca, #df5f53);
   background-attachment: fixed;
