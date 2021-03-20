@@ -1,0 +1,46 @@
+*,
+a,
+input,
+button {
+  box-sizing: border-box;
+  font-family: Pangolin, 'MS Comic Sans', 'Calibri', 'Roboto', sans-serif;
+  color: white;
+}
+
+body {
+  background: linear-gradient(to bottom right, #7648ca, #df5f53);
+  background-attachment: fixed;
+  min-height: 100vh;
+  color: black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1 {
+  font-size: 3em;
+}
+
+a {
+  font-size: 1.4em;
+  color: lightblue;
+}
+
+a:visited {
+  color: lightblue;
+}
+
+
+form {
+  display: block;
+  width: 30%;
+  min-width: 300px;
+  border: lightblue solid 3px;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 30px;
+}
+
+form h3 {
+  margin-top: 5px;
+}

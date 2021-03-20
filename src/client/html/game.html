@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eechi game</title>
+  <script src="js/socket.io.js"></script>
+  <script src="js/game.js" defer></script>
+  <link rel="stylesheet" href="/css/game.css">
+  <link href="https://fonts.googleapis.com/css2?family=Pangolin&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <a href="/">Back to home page</a>
+  <div id="connecting-page" class="page">
+    <h1>Connecting...</h1>
+  </div>
+  <div id="error-page" class="page">
+    <h1>Connection ERROR!</h1>
+  </div>
+  <div id="waiting-page" class="page">
+    <h1>Welcome to the game!</h1>
+    <p id="game-id"></p>
+    <h3>Players <span id="player-count">0/0</span>:</h3>
+    <ul id="player-list"></ul>
+  </div>
+
+  <div id="playing-page" class="page play">
+    <div id="other-players"></div>
+    <h2>Current card:</h2>
+    <div id="top-card"></div>
+    <div class="wide-panel">
+      <div id="draw-deck">
+        <span>Draw</span>
+        <span id="draw-deck-size">0</span>
+      </div>
+      <div id="put-question" style="display:none;">
+        <div id="put-question-card"></div>
+        <div class="choices">
+          <button id="put-question-accept">Play</button>
+          <button id="put-question-deny">Keep</button>
+        </div>
+      </div>
+      <div id="wild-question" class="hidden">
+        <button id="wild-red">red</button>
+        <button id="wild-green">green</button>
+        <button id="wild-blue">blue</button>
+        <button id="wild-yellow">yellow</button>
+      </div>
+    </div>
+    <div id="my-cards" class="my-turn"></div>
+  </div>
+
+  <div id="finished-page" class="page">
+    <h1>Winner!</h1>
+    <h1 id="winner-name">betty</h1>
+  </div>
+</body>
+
+</html>
